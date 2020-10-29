@@ -81,6 +81,35 @@ class AbsorptionViewWidget(QWidget, Ui_AbsorptionViewWidget):
             print('ERROR: too many frames')
             self.reset()
 
+    def process_data_frame(self, frame):
+        self.atom_frame_dict = (frame['atom_frame'][:].astype(int))
+        self.atom_view_editor.setImage(self.atom_frame_dict, autoRange=True, autoLevels=True,
+                                       autoHistogramRange=True)
+
+        self.bright_frame_dict = (frame['bright_frame'][:].astype(int))
+        self.atom_view_editor.setImage(self.bright_frame_dict, autoRange=True, autoLevels=True,
+                                       autoHistogramRange=True)
+
+        self.dark_frame_dict = (frame['dark_frame'][:].astype(int))
+        self.atom_view_editor.setImage(self.dark_frame_dict, autoRange=True, autoLevels=True,
+                                       autoHistogramRange=True)
+
+        if self.analyzer is None:
+            print("You need to choose a camera!")
+            self.reset()
+        else:
+            self.od_frame, self.number_frame = self.analyzer.absorption_od_and_number(self.atom_frame_dict,
+                                                                                      self.bright_frame_dict,
+                                                                                      self.dark_frame_dict)
+
+            self.OD_view_editor.setImage(self.od_frame, autoRange=False, autoLevels=False,
+                                         autoHistogramRange=False)
+
+            self.N_view_editor.setImage(self.number_frame, autoRange=False, autoLevels=False,
+                                        autoHistogramRange=False)
+            self.frame_count = 0
+            self.analysis_complete_signal.emit()
+
     def show_parameters(self):
         self.parameters_window.show()
         self.imaging_parameters_pushButton.setChecked(True)

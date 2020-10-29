@@ -1,6 +1,7 @@
 from package.ui.fluorescence_view_widget_ui import Ui_FluorescenceViewWidget
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import pyqtSignal
+import numpy as np
 
 
 class FluorescenceViewWidget(QWidget, Ui_FluorescenceViewWidget):
@@ -64,3 +65,24 @@ class FluorescenceViewWidget(QWidget, Ui_FluorescenceViewWidget):
         else:
             print('ERROR: too many frames')
             self.reset()
+
+    def process_data_frame(self, frame):
+
+            self.atom_frame_dict = np.transpose(frame['atom_frame'][:].astype(int))
+            self.atom_view_editor.setImage(self.atom_frame_dict, autoRange=True, autoLevels=True,
+                                           autoHistogramRange=True)
+
+            self.ref_frame_dict = np.transpose(frame['reference_frame'][:].astype(int))
+            self.reference_view_editor.setImage(self.ref_frame_dict, autoRange=True, autoLevels=True,
+                                                autoHistogramRange=True)
+
+            self.diff_frame = self.atom_frame_dict - self.ref_frame_dict
+            self.number_frame = 1 * self.diff_frame
+
+            self.diff_view_editor.setImage(self.diff_frame, autoRange=True, autoLevels=True,
+                                           autoHistogramRange=True)
+
+            self.N_view_editor.setImage(self.number_frame, autoRange=True, autoLevels=True,
+                                        autoHistogramRange=True)
+
+            self.analysis_complete_signal.emit()

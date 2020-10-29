@@ -15,12 +15,16 @@ Updated by Justin Gerber (2020) - gerberja@berkeley.edu
 import copy
 import sys
 import ctypes
+import numpy as np
+import h5py
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5.QtGui import QIcon
+from pathlib import Path
 from package.ui.camerawindow_ui import Ui_CameraWindow
 from package.data.camerasettings import RbAtom
 from package.widgets.imagecapturemodewidget import ImagingMode
+from package.widgets.file_dialog_widget import OpenFileDialog
 
 
 class JKamWindow(QMainWindow, Ui_CameraWindow):
@@ -46,6 +50,7 @@ class JKamWindow(QMainWindow, Ui_CameraWindow):
         self.fluorescence_view_widget.analysis_complete_signal.connect(self.on_all_frames_received)
         self.analyze_signal.connect(self.roi_analyzer_widget.analyze)
         self.analyze_signal.connect(self.gaussian2d_analyzer_widget.analyze)
+        self.open_inquiry_signal.connect(self.on_file_open_inquiry)
 
         self.imaging_mode = None
         self.imagecapturemodewidget.state_set_signal.connect(self.set_imaging_mode)
@@ -80,6 +85,21 @@ class JKamWindow(QMainWindow, Ui_CameraWindow):
             self.display_multishot_frame(frame_dict)
         self.frame_received_signal.connect(self.on_capture)
 
+    def on_file_open_inquiry(self):
+        openFile = OpenFileDialog()
+        #print("connected !")
+        frame = openFile.openFileNameDialog()
+        key_number = len(frame.keys())
+        print(frame.keys())
+        if key_number == 3:
+            print("Absorption Image")
+            self.display_absorption_data_frame(frame)
+        elif key_number == 2:
+            print("Fluorescence Image")
+            self.display_fluorescence_data_frame(frame)
+        else:
+            print("Sorry, I do not know what it is.")
+
     def display_video_frame(self, frame_dict):
         self.video_frame_dict = frame_dict
         video_frame = self.video_frame_dict['frame']
@@ -90,8 +110,14 @@ class JKamWindow(QMainWindow, Ui_CameraWindow):
     def display_absorption_frame(self, frame_dict):
         self.absorption_view_widget.process_frame(frame_dict)
 
+    def display_absorption_data_frame(self, frame):
+        self.absorption_view_widget.process_data_frame(frame)
+
     def display_fluorescence_frame(self, frame_dict):
         self.fluorescence_view_widget.process_frame(frame_dict)
+
+    def display_fluorescence_data_frame(self, frame):
+        self.fluorescence_view_widget.process_data_frame(frame)
 
     def display_multishot_frame(self, frame_dict):
         self.multishot_view_widget.process_frame(frame_dict)
